@@ -33,7 +33,7 @@ async def start_container():
     
     try:
         container = client.containers.run(
-            "alpine-ssh-cgpt",
+            "alpine-ssh-ctf",
             name=container_name,
             detach=True,
             ports={'22/tcp': port},
