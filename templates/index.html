@@ -1,0 +1,130 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CTF Challenges</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; max-width: 800px; }
+        .challenge { margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 20px; font-size: 16px; margin-right: 10px; }
+        #result-ssh, #result-web { margin-top: 20px; padding: 15px; border: 1px solid #eee; }
+        #timer-ssh, #timer-web { font-size: 18px; font-weight: bold; color: #d9534f; margin-top: 10px; }
+        h2 { color: #337ab7; }
+    </style>
+</head>
+<body>
+    <h1>CTF Challenges</h1>
+    
+    <div class="challenge">
+        <h2>Challenge 1: SSH Access</h2>
+        <p>Start an SSH container and connect to it using the provided credentials.</p>
+        <button onclick="startSshContainer()">Запустить SSH контейнер</button>
+        <div id="result-ssh"></div>
+        <div id="timer-ssh"></div>
+    </div>
+    
+    <div class="challenge">
+        <h2>Challenge 2: Web Challenge</h2>
+        <p>Start a web container and find the flag in the web interface.</p>
+        <button onclick="startWebContainer()">Запустить Web контейнер</button>
+        <div id="result-web"></div>
+        <div id="timer-web"></div>
+    </div>
+
+    <script>
+        let sshTimerInterval, webTimerInterval;
+        let sshExpirationTime, webExpirationTime;
+
+        function updateTimer(timerId, expirationTime) {
+            const now = new Date();
+            const diff = expirationTime - now;
+            
+            if (diff <= 0) {
+                clearInterval(timerId === 'timer-ssh' ? sshTimerInterval : webTimerInterval);
+                document.getElementById(timerId).textContent = 'Время контейнера истекло!';
+                return;
+            }
+            
+            const minutes = Math.floor(diff / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+            
+            document.getElementById(timerId).textContent = 
+                `Контейнер будет остановлен через: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        async function startSshContainer() {
+            const btn = document.querySelector('button[onclick="startSshContainer()"]');
+            btn.disabled = true;
+            btn.textContent = 'Запуск...';
+            
+            if (sshTimerInterval) {
+                clearInterval(sshTimerInterval);
+                document.getElementById('timer-ssh').textContent = '';
+            }
+            
+            const response = await fetch('/start-container', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const data = await response.json();
+            const resultDiv = document.getElementById('result-ssh');
+            
+            if (data.status === 'success') {
+                resultDiv.innerHTML = `
+                    <h3>SSH контейнер запущен!</h3>
+                    <p><strong>SSH подключение:</strong></p>
+                    <pre>ssh ${data.username}@${data.host} -p ${data.port}</pre>
+                    <p><strong>Пароль:</strong> ${data.password}</p>
+                    <p>Container ID: ${data.container_id}</p>
+                `;
+                
+                sshExpirationTime = new Date(data.expires_at);
+                updateTimer('timer-ssh', sshExpirationTime);
+                sshTimerInterval = setInterval(() => updateTimer('timer-ssh', sshExpirationTime), 1000);
+            } else {
+                resultDiv.innerHTML = `<p style="color:red">Ошибка: ${data.error || data.message}</p>`;
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'Запустить SSH контейнер';
+        }
+
+        async function startWebContainer() {
+            const btn = document.querySelector('button[onclick="startWebContainer()"]');
+            btn.disabled = true;
+            btn.textContent = 'Запуск...';
+            
+            if (webTimerInterval) {
+                clearInterval(webTimerInterval);
+                document.getElementById('timer-web').textContent = '';
+            }
+            
+            const response = await fetch('/start-web-container', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const data = await response.json();
+            const resultDiv = document.getElementById('result-web');
+            
+            if (data.status === 'success') {
+                resultDiv.innerHTML = `
+                    <h3>Web контейнер запущен!</h3>
+                    <p><strong>Доступ по ссылке:</strong> <a href="${data.url}" target="_blank">${data.url}</a></p>
+                    <p>Container ID: ${data.container_id}</p>
+                `;
+                
+                webExpirationTime = new Date(data.expires_at);
+                updateTimer('timer-web', webExpirationTime);
+                webTimerInterval = setInterval(() => updateTimer('timer-web', webExpirationTime), 1000);
+            } else {
+                resultDiv.innerHTML = `<p style="color:red">Ошибка: ${data.error || data.message}</p>`;
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'Запустить Web контейнер';
+        }
+    </script>
+</body>
+</html>
