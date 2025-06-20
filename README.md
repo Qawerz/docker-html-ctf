@@ -1,6 +1,6 @@
 # docker-html-ctf
 
-## Установка 
+### Установка 
 ```
 pip install uvicorn docker jinja2 fastapi python-socketio
 ```
@@ -8,7 +8,7 @@ pip install uvicorn docker jinja2 fastapi python-socketio
 ```
 pip install -r req.txt
 ```
-## Запуск
+### Запуск
 ```
 python3 main.py
 ```
@@ -16,6 +16,9 @@ python3 main.py
 ---
 
 ## Работа с Docker
+> [!IMPORTANT]
+> Не забудь установить докер на машину.
+
 Для работы на вашей тачке, надо сбилдить образы. Для этого используем `docker build`:
 ```
 docker build -t alpine-ssh-ctf ./ssh-docker-alpine
