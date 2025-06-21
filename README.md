@@ -13,7 +13,6 @@ pip install -r req.txt
 python3 main.py
 ```
 
----
 
 ## Работа с Docker
 > [!IMPORTANT]
